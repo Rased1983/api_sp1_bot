@@ -34,8 +34,12 @@ def parse_homework_status(homework):
                 'approved': 'Ревьюеру всё понравилось, работа зачтена!'}
     verdict = statuses[status]
     if status == 'reviewing':
-        return verdict
-    return f'У вас проверили работу "{homework_name}"!\n\n{verdict}'
+        send_message(verdict)
+        time.sleep(30 * 60)  # the review is not done quickly :)
+        return
+    return send_message(
+        f'У вас проверили работу "{homework_name}"!\n\n{verdict}'
+    )
 
 
 def get_homeworks(current_timestamp):
@@ -57,9 +61,9 @@ def main():
         try:
             homework = get_homeworks(current_timestamp)
             if homework['homeworks']:
-                send_message(parse_homework_status(homework['homeworks'][0]))
+                parse_homework_status(homework['homeworks'][0])
             current_timestamp = homework['current_date']
-            time.sleep(20 * 60)  # Опрашивать раз в 20 минут
+            time.sleep(5 * 60)  # request every 5 minutes
 
         except Exception as e:
             logger.error(f'Бот упал с ошибкой: {e}')
