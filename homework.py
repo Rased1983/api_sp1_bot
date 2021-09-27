@@ -29,12 +29,12 @@ logger = logging.getLogger(__name__)
 def parse_homework_status(homework):
     homework_name = homework['homework_name']
     status = homework['status']
+    statuses = {'reviewing': 'Работа взята на ревью, ожидайте результат',
+                'rejected': 'К сожалению, в работе нашлись ошибки.',
+                'approved': 'Ревьюеру всё понравилось, работа зачтена!'}
+    verdict = statuses[status]
     if status == 'reviewing':
-        return
-    elif status == 'rejected':
-        verdict = 'К сожалению, в работе нашлись ошибки.'
-    elif status == 'approved':
-        verdict = 'Ревьюеру всё понравилось, работа зачтена!'
+        return verdict
     return f'У вас проверили работу "{homework_name}"!\n\n{verdict}'
 
 
@@ -59,7 +59,7 @@ def main():
             if homework['homeworks']:
                 send_message(parse_homework_status(homework['homeworks'][0]))
             current_timestamp = homework['current_date']
-            time.sleep(5 * 60)  # Опрашивать раз в пять минут
+            time.sleep(20 * 60)  # Опрашивать раз в 20 минут
 
         except Exception as e:
             logger.error(f'Бот упал с ошибкой: {e}')
