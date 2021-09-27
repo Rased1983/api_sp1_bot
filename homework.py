@@ -29,9 +29,11 @@ logger = logging.getLogger(__name__)
 def parse_homework_status(homework):
     homework_name = homework['homework_name']
     status = homework['status']
-    if status == 'rejected':
+    if status == 'reviewing':
+        return
+    elif status == 'rejected':
         verdict = 'К сожалению, в работе нашлись ошибки.'
-    else:
+    elif status == 'approved':
         verdict = 'Ревьюеру всё понравилось, работа зачтена!'
     return f'У вас проверили работу "{homework_name}"!\n\n{verdict}'
 
