@@ -17,7 +17,7 @@ logging.basicConfig(
     format='%(asctime)s, %(levelname)s, %(message)s',
     handlers=[
         RotatingFileHandler(
-            filename=file_for_handler or 'locallog.log',
+            file_for_handler,
             maxBytes=1000000, backupCount=5,
         ),
         logging.StreamHandler()
