@@ -1,22 +1,23 @@
 import logging
 import os
+import sys
 import time
+from logging.handlers import RotatingFileHandler
 
 import requests
-
 from dotenv import load_dotenv
-from logging.handlers import RotatingFileHandler
 from telegram import Bot
 
 
 load_dotenv()
 
+file_for_handler = os.path.dirname(os.path.join(__file__)) + 'log.log'
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.INFO,
     format='%(asctime)s, %(levelname)s, %(message)s',
     handlers=[
         RotatingFileHandler(
-            os.path.dirname(os.path.join(__file__)) + 'log.log',
+            file_for_handler,
             maxBytes=1000000, backupCount=5,
         ),
         logging.StreamHandler()
@@ -27,9 +28,9 @@ try:
     PRAKTIKUM_TOKEN = os.environ['PRAKTIKUM_TOKEN']
     TELEGRAM_TOKEN = os.environ['TELEGRAM_TOKEN']
     CHAT_ID = os.environ['TELEGRAM_CHAT_ID']
-except Exception as e:
+except KeyError as e:
     logging.error(f'Input data error: {e}')
-    raise
+    sys.exit()
 
 HEADERS = {'Authorization': f'OAuth {PRAKTIKUM_TOKEN}'}
 STATUSES = {'reviewing': 'Работа взята на ревью, ожидайте результат',
@@ -48,27 +49,26 @@ def parse_homework_status(homework):
         message = 'Not homework name.'
         logging.exception(message)
         return message
-    elif status is None:
+    if status not in STATUSES:
         message = 'Not homework status.'
         logging.exception(message)
         return message
-    elif status in STATUSES:
-        verdict = STATUSES[status]
-        if status == 'reviewing':
-            return verdict
-        return f'У вас проверили работу "{homework_name}"!\n\n{verdict}'
+    verdict = STATUSES[status]
+    if status == 'reviewing':
+        return verdict
+    return f'У вас проверили работу "{homework_name}"!\n\n{verdict}'
 
 
 def get_homeworks(current_timestamp):
-    if current_timestamp is None:
-        current_timestamp = int(time.time())
     payload = {'from_date': current_timestamp}
     try:
         homework_statuses = requests.get(URL, headers=HEADERS, params=payload)
         return homework_statuses.json()
-    except Exception as e:
+    except requests.exceptions.HTTPError as e:
         logging.exception(f'Request with an error: {e}')
-        return {}
+    except ValueError as e:
+        logging.exception(f'Request with an error: {e}')
+    return {}
 
 
 def send_message(message):
@@ -86,8 +86,9 @@ def main():
             if homework_status:
                 message = parse_homework_status(homework_status[0])
                 send_message(message)
-            current_timestamp = homework.get('current_date')
-            time.sleep(5 * 60)  # Опрашивать раз в 5 минут
+            current_date = homework.get('current_date')
+            current_timestamp = current_date or int(time.time())
+            time.sleep(10 * 60)  # Опрашивать раз в 10 минут
 
         except Exception as e:
             message = f'Bot died with an error: {e}'
