@@ -17,7 +17,7 @@ logging.basicConfig(
     format='%(asctime)s, %(levelname)s, %(message)s',
     handlers=[
         RotatingFileHandler(
-            file_for_handler,
+            filename=file_for_handler or 'locallog.log',
             maxBytes=1000000, backupCount=5,
         ),
         logging.StreamHandler()
@@ -77,7 +77,7 @@ def send_message(message):
 
 
 def main():
-    logging.debug('Бот запущен!')
+    logging.info('Бот запущен!')
     current_timestamp = int(time.time())
     while True:
         try:
