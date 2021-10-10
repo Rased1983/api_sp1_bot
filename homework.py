@@ -11,13 +11,14 @@ from telegram import Bot
 
 load_dotenv()
 
-file_for_handler = os.path.dirname(os.path.join(__file__)) + 'log.log'
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s, %(levelname)s, %(message)s',
     handlers=[
         RotatingFileHandler(
-            file_for_handler,
+            os.path.join(BASE_DIR, 'log.log'),
             maxBytes=1000000, backupCount=5,
         ),
         logging.StreamHandler()
