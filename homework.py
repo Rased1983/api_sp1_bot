@@ -2,6 +2,7 @@ import logging
 import os
 import sys
 import time
+from json import JSONDecodeError
 from logging.handlers import RotatingFileHandler
 
 import requests
@@ -31,7 +32,7 @@ try:
     CHAT_ID = os.environ['TELEGRAM_CHAT_ID']
 except KeyError as e:
     logging.error(f'Input data error: {e}')
-    sys.exit()
+    sys.exit('Input data error!')
 
 HEADERS = {'Authorization': f'OAuth {PRAKTIKUM_TOKEN}'}
 STATUSES = {'reviewing': 'Работа взята на ревью, ожидайте результат',
@@ -66,9 +67,13 @@ def get_homeworks(current_timestamp):
         homework_statuses = requests.get(URL, headers=HEADERS, params=payload)
         return homework_statuses.json()
     except requests.exceptions.HTTPError as e:
-        logging.exception(f'Request with an error: {e}')
-    except ValueError as e:
-        logging.exception(f'Request with an error: {e}')
+        message = f'Request with an error: {e}'
+        logging.error(message)
+        send_message(message)
+    except JSONDecodeError as e:
+        message = f'Json with an error: {e}'
+        logging.error(message)
+        send_message(message)
     return {}
 
 
@@ -88,7 +93,7 @@ def main():
                 message = parse_homework_status(homework_status[0])
                 send_message(message)
             current_date = homework.get('current_date')
-            current_timestamp = current_date or int(time.time())
+            current_timestamp = current_date or current_timestamp
             time.sleep(10 * 60)  # Опрашивать раз в 10 минут
 
         except Exception as e:
